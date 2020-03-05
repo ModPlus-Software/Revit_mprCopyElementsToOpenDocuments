@@ -84,7 +84,7 @@
             { ViewType.Schedule, ModPlusAPI.Language.GetItem(LangItem, "m52") },
             { ViewType.Section, ModPlusAPI.Language.GetItem(LangItem, "m53") },
             { ViewType.SystemBrowser, ModPlusAPI.Language.GetItem(LangItem, "m54") },
-#if !R2015 && !R2016 && !R2017 && !R2018 && !R2019
+#if !R2017 && !R2018 && !R2019
             { ViewType.SystemsAnalysisReport, ModPlusAPI.Language.GetItem(LangItem, "m55") },
 #endif
             { ViewType.ThreeD, ModPlusAPI.Language.GetItem(LangItem, "m56") },
