@@ -68,6 +68,7 @@
     <Compile Include="Helpers\CustomCopyHandlerAbort.cs" />
     <Compile Include="Helpers\CustomCopyHandlerAllow.cs" />
     <Compile Include="Helpers\Logger.cs" />
+    <Compile Include="Helpers\MultiBooleanToVisibilityConverter.cs" />
     <Compile Include="Helpers\RevitOperationService.cs" />
     <Compile Include="Models\GeneralItemsGroup.cs" />
     <Compile Include="Models\BrowserItem.cs" />

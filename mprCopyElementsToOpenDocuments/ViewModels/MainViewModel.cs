@@ -9,6 +9,7 @@
     using Autodesk.Revit.UI;
     using Helpers;
     using Models;
+    using ModPlusAPI;
     using ModPlusAPI.Mvvm;
     using Views;
 
@@ -185,6 +186,19 @@
             set
             {
                 _copyingOptions = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Показывать guid общих параметров
+        /// </summary>
+        public bool ShowSharedParametersGuid
+        {
+            get => bool.TryParse(UserConfigFile.GetValue(_langItem, nameof(ShowSharedParametersGuid)), out var b) && b;
+            set
+            {
+                UserConfigFile.SetValue(_langItem, nameof(ShowSharedParametersGuid), value.ToString(), true);
                 OnPropertyChanged();
             }
         }
@@ -415,11 +429,15 @@
         /// </summary>
         private void ProcessSelectedDocument()
         {
-            var generalGroup = _revitOperationService.GetAllRevitElements(FromDocument);
-            generalGroup.SelectionChanged += OnCheckedElementsCountChanged;
+            var types = _revitOperationService.GetAllRevitElementTypes(FromDocument);
+            types.SelectionChanged += OnCheckedElementsCountChanged;
 
+            var otherElements = _revitOperationService.GetAllRevitElements(FromDocument);
+            otherElements.SelectionChanged += OnCheckedElementsCountChanged;
+            
             GeneralGroups.Clear();
-            GeneralGroups.Add(generalGroup);
+            GeneralGroups.Add(types);
+            GeneralGroups.Add(otherElements);
             ToDocuments.Clear();
             SelectedItems.Clear();
             TotalElements = 1;

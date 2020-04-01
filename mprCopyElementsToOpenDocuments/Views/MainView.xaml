@@ -7,17 +7,20 @@
                    xmlns:model="clr-namespace:mprCopyElementsToOpenDocuments.Models"
                    xmlns:viewModels="clr-namespace:mprCopyElementsToOpenDocuments.ViewModels"
                    xmlns:mps="https://modplus.org/winfx/xaml/controls"
+                   xmlns:helpers="clr-namespace:mprCopyElementsToOpenDocuments.Helpers"
                    mc:Ignorable="d"
                    d:DataContext="{d:DesignInstance viewModels:MainViewModel, d:IsDesignTimeCreatable=False}"
                    d:DesignHeight="750" d:DesignWidth="510"
                    MinHeight="600" MinWidth="600" ResizeMode="CanResizeWithGrip"
-                   WindowStartupLocation="CenterScreen">
+                   WindowStartupLocation="CenterScreen"
+                   x:Name="MainWindow">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/ModPlusStyle;component/Styles/Controls.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <XmlDataProvider x:Key="Lang" Source="E:/ModPlus/Languages/en-US.xml" XPath="ModPlus/mprCopyElementsToOpenDocuments" />
+            <helpers:MultiBooleanToVisibilityConverter x:Key="MultiBooleanToVisibilityConverter"/>
         </ResourceDictionary>
     </Window.Resources>
     <Grid>
@@ -126,7 +129,19 @@
                     <HierarchicalDataTemplate DataType="{x:Type model:GeneralItemsGroup}" 
                                               ItemsSource="{Binding Path=Items}">
                         <CheckBox IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                            <TextBlock Text="{Binding Path=Name, Mode=OneWay}"/>
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock Text="{Binding Path=Name, Mode=OneWay}"/>
+                                <TextBlock Text="{Binding Path=SecondRowValue, Mode=OneWay}" FontSize="10"
+                                           Margin="0 2 0 0" Foreground="{DynamicResource DarkGrayBrush}">
+                                    <TextBlock.Visibility>
+                                        <MultiBinding Converter="{StaticResource MultiBooleanToVisibilityConverter}">
+                                            <Binding Path="ShowSecondRow"></Binding>
+                                            <Binding ElementName="MainWindow" Path="DataContext.ShowSharedParametersGuid"
+                                                     UpdateSourceTrigger="PropertyChanged"></Binding>
+                                        </MultiBinding>
+                                    </TextBlock.Visibility>
+                                </TextBlock>
+                            </StackPanel>
                         </CheckBox>
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
@@ -142,6 +157,7 @@
         <!-- setup -->
         <Grid Grid.Column="1" Grid.Row="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -208,13 +224,22 @@
                 </Grid>
             </GroupBox>
 
+            <!-- other settings -->
+            <GroupBox Grid.Row="2" Header="{Binding Source={StaticResource Lang}, XPath=h13}">
+                <StackPanel Orientation="Vertical">
+                    <CheckBox 
+                        Content="{Binding Source={StaticResource Lang}, XPath=h12}"
+                        IsChecked="{Binding Path=ShowSharedParametersGuid, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></CheckBox>
+                </StackPanel>
+            </GroupBox>
+
             <!-- show log -->
-            <Button Name="LogButton" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+            <Button Name="LogButton" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                     Command="{Binding Path=OpenLogCommand}"
                     Content="{Binding Source={StaticResource Lang}, XPath=h5}"/>
-           
+
             <!-- do copy -->
-            <Button Name="TransferButton" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+            <Button Name="TransferButton" Grid.Row="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                     Command="{Binding Path=StartCopyingCommand}"
                     Content="{Binding Source={StaticResource Lang}, XPath=h6}"/>
         </Grid>

@@ -85,6 +85,12 @@
         }
 
         /// <inheritdoc />
+        public bool ShowSecondRow { get; set; }
+
+        /// <inheritdoc/>
+        public string SecondRowValue { get; set; }
+
+        /// <inheritdoc />
         public bool IsExpanded
         {
             get => _isExpanded;

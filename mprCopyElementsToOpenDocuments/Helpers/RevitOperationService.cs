@@ -23,8 +23,6 @@
             typeof(ProjectInfo),
             typeof(ProjectLocation),
             typeof(SiteLocation),
-            typeof(ParameterElement),
-            typeof(SharedParameterElement),
             typeof(SunAndShadowSettings),
             typeof(SpatialElement),
             typeof(BrowserOrganization),
@@ -149,47 +147,19 @@
             try
             {
                 var allElements = new List<BrowserItem>();
-                allElements.AddRange(GetElementTypes(revitDocument));
                 allElements.AddRange(GetElements(revitDocument));
                 allElements.AddRange(GetSpecialCategoryElements(revitDocument));
                 allElements.AddRange(GetViewTemplates(revitDocument));
                 allElements.AddRange(GetViews(revitDocument));
                 allElements.AddRange(GetElevationMarkers(revitDocument));
                 allElements.AddRange(GetViewports(revitDocument));
-                allElements.AddRange(revitDocument.Document.IsWorkshared ? GetWorksets(revitDocument) : new List<BrowserItem>());
+                if (revitDocument.Document.IsWorkshared)
+                    allElements.AddRange(GetWorksets(revitDocument));
                 allElements.AddRange(GetGridsAndLevels(revitDocument));
                 allElements.AddRange(GetParameters(revitDocument));
                 allElements.AddRange(GetCategories(revitDocument));
-
-                var elementsGroupedByCategory = allElements
-                    .GroupBy(e => e.CategoryName)
-                    .ToList();
-                var categoryGroups = new List<BrowserItem>();
-                foreach (var categoryGroup in elementsGroupedByCategory)
-                {
-                    var elementsGroupedByType = categoryGroup
-                        .GroupBy(e => e.FamilyName)
-                        .ToList();
-                    var typeGroups = new List<BrowserItem>();
-                    foreach (var typeGroup in elementsGroupedByType)
-                    {
-                        var instances = typeGroup.ToList();
-                        instances = instances.OrderBy(instance => instance.Name).ToList();
-
-                        if (string.IsNullOrEmpty(typeGroup.Key))
-                        {
-                            instances.ForEach(instance => typeGroups.Add(instance));
-                            continue;
-                        }
-
-                        typeGroups.Add(new BrowserItem(typeGroup.Key, instances));
-                    }
-
-                    typeGroups = typeGroups.OrderBy(type => type.Name).ToList();
-                    categoryGroups.Add(new BrowserItem(categoryGroup.Key, typeGroups));
-                }
-
-                categoryGroups = categoryGroups.OrderBy(category => category.Name).ToList();
+                
+                var categoryGroups = GetGrouped(allElements);
 
                 Logger.Instance.Add(
                     string.Format(
@@ -199,8 +169,11 @@
                 Logger.Instance.Add("---------");
 
                 return new GeneralItemsGroup(
-                    ModPlusAPI.Language.GetItem(LangItem, "m28"),
-                    categoryGroups);
+                    ModPlusAPI.Language.GetItem(LangItem, "h15"),
+                    categoryGroups)
+                {
+                    IsExpanded = false
+                };
             }
             catch (Exception exception)
             {
@@ -210,6 +183,80 @@
                     ModPlusAPI.Language.GetItem(LangItem, "m28"),
                     new List<BrowserItem>());
             }
+        }
+
+        /// <summary>
+        /// Получает все элементы выбранного документа Revit
+        /// </summary>
+        /// <param name="revitDocument">Документ Revit для извлечения данных</param>
+        /// <returns>Общая группа элементов в браузере</returns>
+        public GeneralItemsGroup GetAllRevitElementTypes(RevitDocument revitDocument)
+        {
+            Logger.Instance.Add(
+                string.Format(
+                    ModPlusAPI.Language.GetItem(LangItem, "m2"),
+                    DateTime.Now.ToLocalTime(),
+                    revitDocument.Title));
+
+            try
+            {
+                var categoryGroups = GetGrouped(GetElementTypes(revitDocument));
+
+                Logger.Instance.Add(
+                    string.Format(
+                        ModPlusAPI.Language.GetItem(LangItem, "m3"),
+                        DateTime.Now.ToLocalTime(),
+                        revitDocument.Title));
+                Logger.Instance.Add("---------");
+
+                return new GeneralItemsGroup(
+                    ModPlusAPI.Language.GetItem(LangItem, "h14"),
+                    categoryGroups)
+                {
+                    IsExpanded = false
+                };
+            }
+            catch (Exception exception)
+            {
+                ExceptionBox.Show(exception);
+
+                return new GeneralItemsGroup(
+                    ModPlusAPI.Language.GetItem(LangItem, "m28"),
+                    new List<BrowserItem>());
+            }
+        }
+
+        private static IEnumerable<BrowserItem> GetGrouped(IEnumerable<BrowserItem> allElements)
+        {
+            var elementsGroupedByCategory = allElements
+                .GroupBy(e => e.CategoryName)
+                .ToList();
+            var categoryGroups = new List<BrowserItem>();
+            foreach (var categoryGroup in elementsGroupedByCategory)
+            {
+                var elementsGroupedByType = categoryGroup
+                    .GroupBy(e => e.FamilyName)
+                    .ToList();
+                var typeGroups = new List<BrowserItem>();
+                foreach (var typeGroup in elementsGroupedByType)
+                {
+                    var instances = typeGroup.ToList();
+                    instances = instances.OrderBy(instance => instance.Name).ToList();
+
+                    if (string.IsNullOrEmpty(typeGroup.Key))
+                    {
+                        instances.ForEach(instance => typeGroups.Add(instance));
+                        continue;
+                    }
+
+                    typeGroups.Add(new BrowserItem(typeGroup.Key, instances));
+                }
+
+                typeGroups = typeGroups.OrderBy(type => type.Name).ToList();
+                categoryGroups.Add(new BrowserItem(categoryGroup.Key, typeGroups));
+            }
+
+            return categoryGroups.OrderBy(category => category.Name).ToList();
         }
 
         /// <summary>
@@ -465,7 +512,7 @@
                     {
                         categories.Add(new BrowserItem(
                             element.Id.IntegerValue,
-                            ModPlusAPI.Language.GetItem(LangItem, "m26"),
+                            ModPlusAPI.Language.GetItem(LangItem, "m59"),
                             string.Empty,
                             element.Name));
                     }
@@ -481,28 +528,31 @@
             if (revitDocument.Document.IsFamilyDocument)
                 return parameters;
 
-            var definitionBindingMapIterator = revitDocument.Document.ParameterBindings.ForwardIterator();
-            definitionBindingMapIterator.Reset();
-            while (definitionBindingMapIterator.MoveNext())
+            foreach (var element in new FilteredElementCollector(revitDocument.Document)
+                .OfClass(typeof(SharedParameterElement))
+                .OfType<SharedParameterElement>())
             {
-                Element element = null;
                 try
                 {
-                    var key = (InternalDefinition)definitionBindingMapIterator.Key;
-                    element = revitDocument.Document.GetElement(key.Id);
                     var elementType = (ElementType)revitDocument.Document.GetElement(element.GetTypeId());
-                    parameters.Add(new BrowserItem(
+                    var browserItem = new BrowserItem(
                         element.Id.IntegerValue,
                         element.Category?.Name ?? _specialTypeCategoryNames[element.GetType().Name],
                         elementType != null ? elementType.FamilyName : string.Empty,
-                        element.Name));
+                        element.Name)
+                    {
+                        SecondRowValue = element.GuidValue.ToString(), 
+                        ShowSecondRow = true
+                    };
+                    
+                    parameters.Add(browserItem);
                 }
                 catch (Exception ex)
                 {
                     Logger.Instance.Add(string.Format(
                         ModPlusAPI.Language.GetItem(LangItem, "m1"),
                         DateTime.Now.ToLocalTime(),
-                        element != null ? element.Id.IntegerValue.ToString() : "null",
+                        element.Id.IntegerValue.ToString(),
                         ex.Message));
                 }
             }

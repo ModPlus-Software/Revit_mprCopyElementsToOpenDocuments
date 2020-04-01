@@ -39,7 +39,7 @@
 
         /// <inheritdoc />
         public string Name { get; }
-
+        
         /// <inheritdoc />
         public bool? Checked
         {
@@ -58,6 +58,12 @@
                 OnSelectionChanged();
             }
         }
+
+        /// <inheritdoc />
+        public bool ShowSecondRow { get; set; }
+
+        /// <inheritdoc/>
+        public string SecondRowValue { get; set; }
 
         /// <inheritdoc />
         public bool IsExpanded
