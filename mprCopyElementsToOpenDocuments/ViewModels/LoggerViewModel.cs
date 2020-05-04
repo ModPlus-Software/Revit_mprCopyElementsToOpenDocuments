@@ -1,6 +1,5 @@
 ﻿namespace mprCopyElementsToOpenDocuments.ViewModels
 {
-    using System;
     using System.Windows.Input;
     using Helpers;
     using ModPlusAPI.Mvvm;
@@ -20,7 +19,7 @@
         /// <summary>
         /// Текущее состояние журнала событий
         /// </summary>
-        public string CurrentLogState => string.Join(Environment.NewLine, Logger.Instance);
+        public string CurrentLogState => Logger.Instance.GetLogString();
 
         /// <summary>
         /// Сохраняет данные журнала в файл

@@ -93,6 +93,10 @@
         private bool _stopCopyingOperation;
         private int _passedElements;
 
+        // Текущий копируемый элемент. Поле требуется, чтобы иметь возможность добавлять в лог
+        // сообщение из обработчика Application_FailuresProcessing
+        private BrowserItem _currentCopiedElement;
+
         /// <summary>
         /// Создает экземпляр класса <see cref="UIApplication"/>
         /// </summary>
@@ -138,7 +142,7 @@
         /// <returns>Общая группа элементов в браузере</returns>
         public GeneralItemsGroup GetAllRevitElements(RevitDocument revitDocument)
         {
-            Logger.Instance.Add(
+            Logger.Instance.AddInfo(
                 string.Format(
                     ModPlusAPI.Language.GetItem(LangItem, "m2"),
                     DateTime.Now.ToLocalTime(),
@@ -158,15 +162,15 @@
                 allElements.AddRange(GetGridsAndLevels(revitDocument));
                 allElements.AddRange(GetParameters(revitDocument));
                 allElements.AddRange(GetCategories(revitDocument));
-                
+
                 var categoryGroups = GetGrouped(allElements);
 
-                Logger.Instance.Add(
+                Logger.Instance.AddInfo(
                     string.Format(
                         ModPlusAPI.Language.GetItem(LangItem, "m3"),
                         DateTime.Now.ToLocalTime(),
                         revitDocument.Title));
-                Logger.Instance.Add("---------");
+                Logger.Instance.AddInfo("---------");
 
                 return new GeneralItemsGroup(
                     ModPlusAPI.Language.GetItem(LangItem, "h15"),
@@ -192,9 +196,10 @@
         /// <returns>Общая группа элементов в браузере</returns>
         public GeneralItemsGroup GetAllRevitElementTypes(RevitDocument revitDocument)
         {
-            Logger.Instance.Add(
+            // Начало операции сбора типоразмеров модели
+            Logger.Instance.AddInfo(
                 string.Format(
-                    ModPlusAPI.Language.GetItem(LangItem, "m2"),
+                    ModPlusAPI.Language.GetItem(LangItem, "m60"),
                     DateTime.Now.ToLocalTime(),
                     revitDocument.Title));
 
@@ -202,12 +207,13 @@
             {
                 var categoryGroups = GetGrouped(GetElementTypes(revitDocument));
 
-                Logger.Instance.Add(
+                // Завершение операции сбора типоразмеров модели
+                Logger.Instance.AddInfo(
                     string.Format(
-                        ModPlusAPI.Language.GetItem(LangItem, "m3"),
+                        ModPlusAPI.Language.GetItem(LangItem, "m61"),
                         DateTime.Now.ToLocalTime(),
                         revitDocument.Title));
-                Logger.Instance.Add("---------");
+                Logger.Instance.AddInfo("---------");
 
                 return new GeneralItemsGroup(
                     ModPlusAPI.Language.GetItem(LangItem, "h14"),
@@ -266,22 +272,25 @@
         /// <param name="documentsTo">Список документов в которые осуществляется копирование</param>
         /// <param name="elements">Список элементов Revit</param>
         /// <param name="copyingOptions">Настройки копирования элементов</param>
+        /// <param name="suppressFailures">Подавлять предупреждения</param>
         public async void CopyElements(
             RevitDocument documentFrom,
             IEnumerable<RevitDocument> documentsTo,
             List<BrowserItem> elements,
-            CopyingOptions copyingOptions)
+            CopyingOptions copyingOptions,
+            bool suppressFailures)
         {
-            _uiApplication.Application.FailuresProcessing += Application_FailuresProcessing;
+            if (suppressFailures)
+                _uiApplication.Application.FailuresProcessing += Application_FailuresProcessing;
 
             var revitDocuments = documentsTo.ToList();
 
-            Logger.Instance.Add(string.Format(
+            Logger.Instance.AddInfo(string.Format(
                 ModPlusAPI.Language.GetItem(LangItem, "m5"),
                 DateTime.Now.ToLocalTime(),
                 documentFrom.Title,
                 string.Join(", ", revitDocuments.Select(doc => doc.Title))));
-            Logger.Instance.Add(string.Format(
+            Logger.Instance.AddInfo(string.Format(
                 ModPlusAPI.Language.GetItem(LangItem, "m8"),
                 GetCopyingOptionsName(copyingOptions)));
 
@@ -300,6 +309,7 @@
             {
                 foreach (var element in elements)
                 {
+                    _currentCopiedElement = element;
                     var succeed = true;
                     try
                     {
@@ -325,7 +335,7 @@
                                     }
                                     else
                                     {
-                                        Logger.Instance.Add(string.Format(
+                                        Logger.Instance.AddInfo(string.Format(
                                             ModPlusAPI.Language.GetItem(LangItem, "m9"),
                                             DateTime.Now.ToLocalTime(),
                                             documentTo.Title));
@@ -348,7 +358,7 @@
                             }
                             catch (Exception e)
                             {
-                                Logger.Instance.Add(string.Format(
+                                Logger.Instance.AddError(string.Format(
                                     ModPlusAPI.Language.GetItem(LangItem, "m7"),
                                     DateTime.Now.ToLocalTime(),
                                     element.Name,
@@ -364,7 +374,7 @@
                     }
                     catch (Exception e)
                     {
-                        Logger.Instance.Add(string.Format(
+                        Logger.Instance.AddError(string.Format(
                             ModPlusAPI.Language.GetItem(LangItem, "m7"),
                             DateTime.Now.ToLocalTime(),
                             element.Name,
@@ -383,7 +393,8 @@
                     {
                         OnPassedElementsCountChanged(true);
                         _passedElements = 0;
-                        _uiApplication.Application.FailuresProcessing -= Application_FailuresProcessing;
+                        if (suppressFailures)
+                            _uiApplication.Application.FailuresProcessing -= Application_FailuresProcessing;
                     }
                     else
                     {
@@ -392,12 +403,12 @@
                 }
             }
 
-            Logger.Instance.Add(string.Format(
+            Logger.Instance.AddInfo(string.Format(
                 ModPlusAPI.Language.GetItem(LangItem, "m6"),
                 DateTime.Now.ToLocalTime(),
                 documentFrom.Title,
                 string.Join(", ", revitDocuments.Select(doc => doc.Title))));
-            Logger.Instance.Add("---------");
+            Logger.Instance.AddInfo("---------");
         }
 
         /// <summary>
@@ -440,7 +451,7 @@
         /// <summary>
         /// Обработчик предупреждений
         /// </summary>
-        private static void Application_FailuresProcessing(
+        private void Application_FailuresProcessing(
             object sender,
             Autodesk.Revit.DB.Events.FailuresProcessingEventArgs e)
         {
@@ -450,15 +461,33 @@
             if (!failList.Any())
                 return;
 
+            FailureProcessingResult processingResult;
             if (failureAccessor.GetSeverity() == FailureSeverity.Warning)
             {
                 failureAccessor.DeleteAllWarnings();
-                e.SetProcessingResult(FailureProcessingResult.Continue);
+                processingResult = FailureProcessingResult.Continue;
+            }
+            else if (failureAccessor.GetSeverity() == FailureSeverity.Error)
+            {
+                processingResult = FailureProcessingResult.ProceedWithCommit;
+            }
+            else
+            {
+                processingResult = FailureProcessingResult.ProceedWithRollBack;
+                OnBrokenElementsCountChanged();
+                if (_currentCopiedElement != null)
+                {
+                    Logger.Instance.AddError(string.Format(
+                        ModPlusAPI.Language.GetItem(LangItem, "m7"),
+                        DateTime.Now.ToLocalTime(),
+                        _currentCopiedElement.Name,
+                        _currentCopiedElement.Id,
+                        _currentCopiedElement.CategoryName,
+                        ModPlusAPI.Language.GetItem(LangItem, "m62")));
+                }
             }
 
-            e.SetProcessingResult(failureAccessor.GetSeverity() == FailureSeverity.Error
-                ? FailureProcessingResult.ProceedWithCommit
-                : FailureProcessingResult.ProceedWithRollBack);
+            e.SetProcessingResult(processingResult);
         }
 
         #region Get from document
@@ -480,7 +509,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Add(
+                        Logger.Instance.AddError(
                             string.Format(
                                 ModPlusAPI.Language.GetItem(LangItem, "m1"),
                                 DateTime.Now.ToLocalTime(),
@@ -530,7 +559,8 @@
 
             foreach (var element in new FilteredElementCollector(revitDocument.Document)
                 .OfClass(typeof(SharedParameterElement))
-                .OfType<SharedParameterElement>())
+                .OfType<SharedParameterElement>()
+                .Where(e => e.GetTypeId() != ElementId.InvalidElementId))
             {
                 try
                 {
@@ -541,15 +571,15 @@
                         elementType != null ? elementType.FamilyName : string.Empty,
                         element.Name)
                     {
-                        SecondRowValue = element.GuidValue.ToString(), 
+                        SecondRowValue = element.GuidValue.ToString(),
                         ShowSecondRow = true
                     };
-                    
+
                     parameters.Add(browserItem);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.Add(string.Format(
+                    Logger.Instance.AddError(string.Format(
                         ModPlusAPI.Language.GetItem(LangItem, "m1"),
                         DateTime.Now.ToLocalTime(),
                         element.Id.IntegerValue.ToString(),
@@ -568,6 +598,7 @@
                     typeof(Grid), typeof(Level)
                 }))
                 .WhereElementIsNotElementType()
+                .Where(e => e.GetTypeId() != ElementId.InvalidElementId)
                 .Select(e =>
                 {
                     try
@@ -581,7 +612,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Add(
+                        Logger.Instance.AddError(
                             string.Format(
                                 ModPlusAPI.Language.GetItem(LangItem, "m1"),
                                 DateTime.Now.ToLocalTime(),
@@ -609,7 +640,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Add(
+                        Logger.Instance.AddError(
                             string.Format(
                                 ModPlusAPI.Language.GetItem(LangItem, "m1"),
                                 DateTime.Now.ToLocalTime(),
@@ -626,6 +657,7 @@
             return new FilteredElementCollector(revitDocument.Document)
                 .OfClass(typeof(ElementType))
                 .Where(e => ((ElementType)e).FamilyName == "Viewport")
+                .Where(e => e.GetTypeId() != ElementId.InvalidElementId)
                 .Select(e =>
                 {
                     try
@@ -639,7 +671,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Add(
+                        Logger.Instance.AddError(
                             string.Format(
                                 ModPlusAPI.Language.GetItem(LangItem, "m1"),
                                 DateTime.Now.ToLocalTime(),
@@ -657,6 +689,7 @@
                 .OfClass(typeof(ElevationMarker))
                 .WhereElementIsNotElementType()
                 .Where(e => ((ElevationMarker)e).CurrentViewCount > 0)
+                .Where(e => e.GetTypeId() != ElementId.InvalidElementId)
                 .Select(e =>
                 {
                     try
@@ -670,7 +703,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Add(
+                        Logger.Instance.AddError(
                             string.Format(
                                 ModPlusAPI.Language.GetItem(LangItem, "m1"),
                                 DateTime.Now.ToLocalTime(),
@@ -688,6 +721,7 @@
                 .OfClass(typeof(View))
                 .WhereElementIsNotElementType()
                 .Where(e => !((View)e).IsTemplate)
+                .Where(e => e.GetTypeId() != ElementId.InvalidElementId)
                 .Select(e =>
                 {
                     try
@@ -701,7 +735,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Add(
+                        Logger.Instance.AddError(
                             string.Format(
                                 ModPlusAPI.Language.GetItem(LangItem, "m1"),
                                 DateTime.Now.ToLocalTime(),
@@ -731,7 +765,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Add(
+                        Logger.Instance.AddError(
                             string.Format(
                                 ModPlusAPI.Language.GetItem(LangItem, "m1"),
                                 DateTime.Now.ToLocalTime(),
@@ -753,6 +787,7 @@
                     new ElementCategoryFilter(BuiltInCategory.OST_Phases),
                     new ElementCategoryFilter(BuiltInCategory.OST_VolumeOfInterest)
                 }))
+                .Where(e => e.GetTypeId() != ElementId.InvalidElementId)
                 .Select(e =>
                 {
                     try
@@ -766,7 +801,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Add(
+                        Logger.Instance.AddError(
                             string.Format(
                                 ModPlusAPI.Language.GetItem(LangItem, "m1"),
                                 DateTime.Now.ToLocalTime(),
@@ -782,6 +817,7 @@
         {
             return new FilteredElementCollector(revitDocument.Document)
                 .WherePasses(new ElementMulticlassFilter(_elementTypes))
+                .Where(e => e.GetTypeId() != ElementId.InvalidElementId)
                 .Select(e =>
                 {
                     try
@@ -795,7 +831,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Add(
+                        Logger.Instance.AddError(
                             string.Format(
                                 ModPlusAPI.Language.GetItem(LangItem, "m1"),
                                 DateTime.Now.ToLocalTime(),

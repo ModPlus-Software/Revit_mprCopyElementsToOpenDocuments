@@ -10,7 +10,7 @@
                    xmlns:helpers="clr-namespace:mprCopyElementsToOpenDocuments.Helpers"
                    mc:Ignorable="d"
                    d:DataContext="{d:DesignInstance viewModels:MainViewModel, d:IsDesignTimeCreatable=False}"
-                   d:DesignHeight="750" d:DesignWidth="510"
+                   Height="600" Width="600"
                    MinHeight="600" MinWidth="600" ResizeMode="CanResizeWithGrip"
                    WindowStartupLocation="CenterScreen"
                    x:Name="MainWindow">
@@ -229,14 +229,21 @@
                 <StackPanel Orientation="Vertical">
                     <CheckBox 
                         Content="{Binding Source={StaticResource Lang}, XPath=h12}"
-                        IsChecked="{Binding Path=ShowSharedParametersGuid, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></CheckBox>
+                        IsChecked="{Binding Path=ShowSharedParametersGuid, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <CheckBox 
+                        Content="{Binding Source={StaticResource Lang}, XPath=h16}"
+                        IsChecked="{Binding Path=SuppressWarnings, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
             </GroupBox>
 
             <!-- show log -->
-            <Button Name="LogButton" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+            <mps:Badged Grid.Row="4" HorizontalAlignment="Stretch" Badge="{Binding Path=ErrorsCount}"
+                        BadgePlacementMode="Left" BadgeBackground="{DynamicResource ErrorBrush}"
+                        HorizontalContentAlignment="Stretch">
+            <Button Name="LogButton" HorizontalAlignment="Stretch"
                     Command="{Binding Path=OpenLogCommand}"
                     Content="{Binding Source={StaticResource Lang}, XPath=h5}"/>
+            </mps:Badged>
 
             <!-- do copy -->
             <Button Name="TransferButton" Grid.Row="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"

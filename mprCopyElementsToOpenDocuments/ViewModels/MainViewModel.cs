@@ -204,6 +204,31 @@
         }
 
         /// <summary>
+        /// Подавлять предупреждения
+        /// </summary>
+        public bool SuppressWarnings
+        {
+            get => !bool.TryParse(UserConfigFile.GetValue(_langItem, nameof(SuppressWarnings)), out var b) || b;
+            set
+            {
+                UserConfigFile.SetValue(_langItem, nameof(SuppressWarnings), value.ToString(), true);
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Количество ошибок в логе
+        /// </summary>
+        public string ErrorsCount
+        {
+            get
+            {
+                var errorsCount = Logger.Instance.GetErrorsCount();
+                return errorsCount > 0 ? errorsCount.ToString() : null;
+            }
+        }
+
+        /// <summary>
         /// Обобщенные группы элементов для отображения в дереве
         /// </summary>
         public ObservableCollection<GeneralItemsGroup> GeneralGroups { get; }
@@ -429,6 +454,7 @@
         /// </summary>
         private void ProcessSelectedDocument()
         {
+            Logger.Instance.Clear();
             var types = _revitOperationService.GetAllRevitElementTypes(FromDocument);
             types.SelectionChanged += OnCheckedElementsCountChanged;
 
@@ -462,6 +488,7 @@
             }
 
             UpdateItemsVisibility();
+            OnPropertyChanged(nameof(ErrorsCount));
         }
 
         /// <summary>
@@ -479,7 +506,10 @@
                             FromDocument,
                             ToDocuments.Where(doc => doc.Selected),
                             SelectedItems,
-                            CopyingOptions);
+                            CopyingOptions,
+                            SuppressWarnings);
+            
+            OnPropertyChanged(nameof(ErrorsCount));
         }
 
         /// <summary>
@@ -554,12 +584,12 @@
                 IsVisible = Visibility.Hidden;
                 _mainView.IsChangeableFieldsEnabled = true;
                 var resultMessage = string.Format(
-                    ModPlusAPI.Language.GetItem(_langItem, "m31"),
+                    Language.GetItem(_langItem, "m31"),
                     PassedElements - BrokenElements,
                     Environment.NewLine,
                     BrokenElements,
                     Environment.NewLine);
-                TaskDialog.Show(ModPlusAPI.Language.GetItem(_langItem, "m30"), resultMessage);
+                TaskDialog.Show(Language.GetItem(_langItem, "m30"), resultMessage);
                 _mainView.Activate();
                 PassedElements = 0;
                 BrokenElements = 0;
