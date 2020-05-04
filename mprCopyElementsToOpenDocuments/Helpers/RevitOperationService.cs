@@ -467,13 +467,8 @@
                 failureAccessor.DeleteAllWarnings();
                 processingResult = FailureProcessingResult.Continue;
             }
-            else if (failureAccessor.GetSeverity() == FailureSeverity.Error)
-            {
-                processingResult = FailureProcessingResult.ProceedWithCommit;
-            }
             else
             {
-                processingResult = FailureProcessingResult.ProceedWithRollBack;
                 OnBrokenElementsCountChanged();
                 if (_currentCopiedElement != null)
                 {
@@ -485,6 +480,8 @@
                         _currentCopiedElement.CategoryName,
                         ModPlusAPI.Language.GetItem(LangItem, "m62")));
                 }
+
+                processingResult = FailureProcessingResult.ProceedWithRollBack;
             }
 
             e.SetProcessingResult(processingResult);
