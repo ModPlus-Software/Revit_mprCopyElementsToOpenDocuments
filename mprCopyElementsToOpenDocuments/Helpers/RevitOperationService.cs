@@ -309,15 +309,32 @@
             {
                 foreach (var element in elements)
                 {
+                    if (_stopCopyingOperation)
+                    {
+                        _stopCopyingOperation = false;
+                        OnPassedElementsCountChanged(true);
+                        return;
+                    }
+
                     _currentCopiedElement = element;
                     var succeed = true;
                     try
                     {
-                        await Task.Delay(100).ConfigureAwait(true);
+                        await Task.Delay(10).ConfigureAwait(true);
 
-                        var elementId = new ElementId(element.Id);
-                        var revitElement = documentFrom.Document.GetElement(elementId);
-                        ICollection<ElementId> elementIds = new List<ElementId> { elementId };
+                        Workset workset = null;
+                        ICollection<ElementId> elementIds = null;
+                        if (element.IsWorksetId)
+                        {
+                            var worksetId = new WorksetId(element.Id);
+                            var worksetTable = documentFrom.Document.GetWorksetTable();
+                            workset = worksetTable.GetWorkset(worksetId);
+                        }
+                        else
+                        {
+                            var elementId = new ElementId(element.Id);
+                            elementIds = new List<ElementId> { elementId };
+                        }
 
                         using (var transaction = new Transaction(
                             documentTo.Document,
@@ -327,11 +344,11 @@
 
                             try
                             {
-                                if (revitElement.GetType() == typeof(Workset))
+                                if (workset != null)
                                 {
                                     if (documentTo.Document.IsWorkshared)
                                     {
-                                        Workset.Create(documentTo.Document, revitElement.Name);
+                                        Workset.Create(documentTo.Document, workset.Name);
                                     }
                                     else
                                     {
@@ -342,19 +359,15 @@
                                     }
                                 }
 
-                                if (_stopCopyingOperation)
+                                if (elementIds != null && elementIds.Any())
                                 {
-                                    _stopCopyingOperation = false;
-                                    OnPassedElementsCountChanged(true);
-                                    return;
+                                    ElementTransformUtils.CopyElements(
+                                        documentFrom.Document,
+                                        elementIds,
+                                        documentTo.Document,
+                                        null,
+                                        copyPasteOption);
                                 }
-
-                                ElementTransformUtils.CopyElements(
-                                documentFrom.Document,
-                                elementIds,
-                                documentTo.Document,
-                                null,
-                                copyPasteOption);
                             }
                             catch (Exception e)
                             {
@@ -633,7 +646,10 @@
                             e.Id.IntegerValue,
                             ModPlusAPI.Language.GetItem(LangItem, "m10"),
                             "-",
-                            e.Name);
+                            e.Name)
+                        {
+                            IsWorksetId = true
+                        };
                     }
                     catch (Exception ex)
                     {

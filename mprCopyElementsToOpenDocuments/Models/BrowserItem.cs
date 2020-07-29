@@ -114,6 +114,12 @@
         public string Name { get; }
 
         /// <summary>
+        /// True указывает, что свойство <see cref="Id"/> содержит числовое представление типа
+        /// <see cref="Autodesk.Revit.DB.WorksetId"/> вместо <see cref="Autodesk.Revit.DB.ElementId"/>
+        /// </summary>
+        public bool IsWorksetId { get; set; }
+
+        /// <summary>
         /// Видимость элементов дерева
         /// </summary>
         public Visibility Visibility
