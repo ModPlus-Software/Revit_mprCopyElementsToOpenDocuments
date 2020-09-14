@@ -131,6 +131,8 @@
         {
             foreach (Document document in _uiApplication.Application.Documents)
             {
+                if (document.IsLinked)
+                    continue;
                 yield return new RevitDocument(document);
             }
         }
