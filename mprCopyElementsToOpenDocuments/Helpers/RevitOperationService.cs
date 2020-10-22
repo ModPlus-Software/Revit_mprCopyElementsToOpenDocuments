@@ -19,7 +19,6 @@
         private readonly List<Type> _elementTypes = new List<Type>
         {
             typeof(ExportDWGSettings),
-            typeof(Material),
             typeof(ProjectInfo),
             typeof(ProjectLocation),
             typeof(SiteLocation),
@@ -164,6 +163,7 @@
                 allElements.AddRange(GetGridsAndLevels(revitDocument));
                 allElements.AddRange(GetParameters(revitDocument));
                 allElements.AddRange(GetCategories(revitDocument));
+                allElements.AddRange(GetMaterials(revitDocument));
 
                 var categoryGroups = GetGrouped(allElements);
 
@@ -852,6 +852,36 @@
                                 DateTime.Now.ToLocalTime(),
                                 e.Id.IntegerValue,
                                 ex.Message));
+                        return null;
+                    }
+                })
+                .Where(e => e != null);
+        }
+
+        private IEnumerable<BrowserItem> GetMaterials(RevitDocument revitDocument)
+        {
+            return new FilteredElementCollector(revitDocument.Document)
+                .OfCategory(BuiltInCategory.OST_Materials)
+                .OfClass(typeof(Material))
+                .Cast<Material>()
+                .Select(e =>
+                {
+                    try
+                    {
+                        return new BrowserItem(
+                            e.Id.IntegerValue,
+                            e.Category.Name,
+                            e.MaterialCategory,
+                            e.Name);
+                    }
+                    catch (Exception exception)
+                    {
+                        Logger.Instance.AddError(
+                            string.Format(
+                                ModPlusAPI.Language.GetItem("m1"),
+                                DateTime.Now.ToLocalTime(),
+                                e.Id.IntegerValue,
+                                exception.Message));
                         return null;
                     }
                 })
