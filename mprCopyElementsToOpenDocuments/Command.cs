@@ -21,7 +21,9 @@
         {
             try
             {
+#if !DEBUG
                 Statistic.SendCommandStarting(ModPlusConnector.Instance);
+#endif
 
                 if (_mainView == null)
                 {
