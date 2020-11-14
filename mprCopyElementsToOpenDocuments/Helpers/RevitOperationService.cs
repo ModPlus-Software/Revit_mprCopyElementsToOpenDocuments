@@ -14,7 +14,6 @@
     /// </summary>
     public class RevitOperationService
     {
-        private const string LangItem = "mprCopyElementsToOpenDocuments";
         private readonly UIApplication _uiApplication;
         private readonly List<Type> _elementTypes = new List<Type>
         {
@@ -35,58 +34,59 @@
             typeof(Revision),
             typeof(RevisionSettings),
             typeof(TextNoteType),
-            typeof(ViewFamilyType)
+            typeof(ViewFamilyType),
+            typeof(GroupType)
         };
 
         private readonly Dictionary<string, string> _specialTypeCategoryNames = new Dictionary<string, string>
         {
-            { nameof(BrowserOrganization), ModPlusAPI.Language.GetItem(LangItem, "m12") },
-            { nameof(DimensionType), ModPlusAPI.Language.GetItem(LangItem, "m13") },
-            { nameof(SpotDimensionType), ModPlusAPI.Language.GetItem(LangItem, "m13") },
-            { nameof(FillPatternElement), ModPlusAPI.Language.GetItem(LangItem, "m14") },
-            { nameof(ParameterFilterElement), ModPlusAPI.Language.GetItem(LangItem, "m15") },
-            { nameof(LinePatternElement), ModPlusAPI.Language.GetItem(LangItem, "m16") },
-            { nameof(Family), ModPlusAPI.Language.GetItem(LangItem, "m17") },
-            { nameof(PhaseFilter), ModPlusAPI.Language.GetItem(LangItem, "m18") },
-            { nameof(PrintSetting), ModPlusAPI.Language.GetItem(LangItem, "m19") },
-            { nameof(Revision), ModPlusAPI.Language.GetItem(LangItem, "m20") },
-            { nameof(RevisionSettings), ModPlusAPI.Language.GetItem(LangItem, "m21") },
-            { nameof(TextNoteType), ModPlusAPI.Language.GetItem(LangItem, "m22") },
-            { nameof(ViewFamilyType), ModPlusAPI.Language.GetItem(LangItem, "m23") },
-            { nameof(View), ModPlusAPI.Language.GetItem(LangItem, "m24") },
-            { nameof(ParameterElement), ModPlusAPI.Language.GetItem(LangItem, "m25") },
-            { nameof(SharedParameterElement), ModPlusAPI.Language.GetItem(LangItem, "m26") },
+            { nameof(BrowserOrganization), ModPlusAPI.Language.GetItem("m12") },
+            { nameof(DimensionType), ModPlusAPI.Language.GetItem("m13") },
+            { nameof(SpotDimensionType), ModPlusAPI.Language.GetItem("m13") },
+            { nameof(FillPatternElement), ModPlusAPI.Language.GetItem("m14") },
+            { nameof(ParameterFilterElement), ModPlusAPI.Language.GetItem("m15") },
+            { nameof(LinePatternElement), ModPlusAPI.Language.GetItem("m16") },
+            { nameof(Family), ModPlusAPI.Language.GetItem("m17") },
+            { nameof(PhaseFilter), ModPlusAPI.Language.GetItem("m18") },
+            { nameof(PrintSetting), ModPlusAPI.Language.GetItem("m19") },
+            { nameof(Revision), ModPlusAPI.Language.GetItem("m20") },
+            { nameof(RevisionSettings), ModPlusAPI.Language.GetItem("m21") },
+            { nameof(TextNoteType), ModPlusAPI.Language.GetItem("m22") },
+            { nameof(ViewFamilyType), ModPlusAPI.Language.GetItem("m23") },
+            { nameof(View), ModPlusAPI.Language.GetItem("m24") },
+            { nameof(ParameterElement), ModPlusAPI.Language.GetItem("m25") },
+            { nameof(SharedParameterElement), ModPlusAPI.Language.GetItem("m26") },
         };
 
         private readonly Dictionary<ViewType, string> _viewTypeNames = new Dictionary<ViewType, string>
         {
-            { ViewType.AreaPlan, ModPlusAPI.Language.GetItem(LangItem, "m34") },
-            { ViewType.CeilingPlan, ModPlusAPI.Language.GetItem(LangItem, "m35") },
-            { ViewType.ColumnSchedule, ModPlusAPI.Language.GetItem(LangItem, "m36") },
-            { ViewType.CostReport, ModPlusAPI.Language.GetItem(LangItem, "m37") },
-            { ViewType.Detail, ModPlusAPI.Language.GetItem(LangItem, "m38") },
-            { ViewType.DraftingView, ModPlusAPI.Language.GetItem(LangItem, "m39") },
-            { ViewType.DrawingSheet, ModPlusAPI.Language.GetItem(LangItem, "m40") },
-            { ViewType.Elevation, ModPlusAPI.Language.GetItem(LangItem, "m41") },
-            { ViewType.EngineeringPlan, ModPlusAPI.Language.GetItem(LangItem, "m42") },
-            { ViewType.FloorPlan, ModPlusAPI.Language.GetItem(LangItem, "m43") },
-            { ViewType.Internal, ModPlusAPI.Language.GetItem(LangItem, "m44") },
-            { ViewType.Legend, ModPlusAPI.Language.GetItem(LangItem, "m45") },
-            { ViewType.LoadsReport, ModPlusAPI.Language.GetItem(LangItem, "m46") },
-            { ViewType.PanelSchedule, ModPlusAPI.Language.GetItem(LangItem, "m47") },
-            { ViewType.PresureLossReport, ModPlusAPI.Language.GetItem(LangItem, "m48") },
-            { ViewType.ProjectBrowser, ModPlusAPI.Language.GetItem(LangItem, "m49") },
-            { ViewType.Rendering, ModPlusAPI.Language.GetItem(LangItem, "m50") },
-            { ViewType.Report, ModPlusAPI.Language.GetItem(LangItem, "m51") },
-            { ViewType.Schedule, ModPlusAPI.Language.GetItem(LangItem, "m52") },
-            { ViewType.Section, ModPlusAPI.Language.GetItem(LangItem, "m53") },
-            { ViewType.SystemBrowser, ModPlusAPI.Language.GetItem(LangItem, "m54") },
+            { ViewType.AreaPlan, ModPlusAPI.Language.GetItem("m34") },
+            { ViewType.CeilingPlan, ModPlusAPI.Language.GetItem("m35") },
+            { ViewType.ColumnSchedule, ModPlusAPI.Language.GetItem("m36") },
+            { ViewType.CostReport, ModPlusAPI.Language.GetItem("m37") },
+            { ViewType.Detail, ModPlusAPI.Language.GetItem("m38") },
+            { ViewType.DraftingView, ModPlusAPI.Language.GetItem("m39") },
+            { ViewType.DrawingSheet, ModPlusAPI.Language.GetItem("m40") },
+            { ViewType.Elevation, ModPlusAPI.Language.GetItem("m41") },
+            { ViewType.EngineeringPlan, ModPlusAPI.Language.GetItem("m42") },
+            { ViewType.FloorPlan, ModPlusAPI.Language.GetItem("m43") },
+            { ViewType.Internal, ModPlusAPI.Language.GetItem("m44") },
+            { ViewType.Legend, ModPlusAPI.Language.GetItem("m45") },
+            { ViewType.LoadsReport, ModPlusAPI.Language.GetItem("m46") },
+            { ViewType.PanelSchedule, ModPlusAPI.Language.GetItem("m47") },
+            { ViewType.PresureLossReport, ModPlusAPI.Language.GetItem("m48") },
+            { ViewType.ProjectBrowser, ModPlusAPI.Language.GetItem("m49") },
+            { ViewType.Rendering, ModPlusAPI.Language.GetItem("m50") },
+            { ViewType.Report, ModPlusAPI.Language.GetItem("m51") },
+            { ViewType.Schedule, ModPlusAPI.Language.GetItem("m52") },
+            { ViewType.Section, ModPlusAPI.Language.GetItem("m53") },
+            { ViewType.SystemBrowser, ModPlusAPI.Language.GetItem("m54") },
 #if !R2017 && !R2018 && !R2019
-            { ViewType.SystemsAnalysisReport, ModPlusAPI.Language.GetItem(LangItem, "m55") },
+            { ViewType.SystemsAnalysisReport, ModPlusAPI.Language.GetItem("m55") },
 #endif
-            { ViewType.ThreeD, ModPlusAPI.Language.GetItem(LangItem, "m56") },
-            { ViewType.Walkthrough, ModPlusAPI.Language.GetItem(LangItem, "m57") },
-            { ViewType.Undefined, ModPlusAPI.Language.GetItem(LangItem, "m58") },
+            { ViewType.ThreeD, ModPlusAPI.Language.GetItem("m56") },
+            { ViewType.Walkthrough, ModPlusAPI.Language.GetItem("m57") },
+            { ViewType.Undefined, ModPlusAPI.Language.GetItem("m58") },
         };
 
         private bool _stopCopyingOperation;
@@ -145,7 +145,7 @@
         {
             Logger.Instance.AddInfo(
                 string.Format(
-                    ModPlusAPI.Language.GetItem(LangItem, "m2"),
+                    ModPlusAPI.Language.GetItem("m2"),
                     DateTime.Now.ToLocalTime(),
                     revitDocument.Title));
 
@@ -169,13 +169,13 @@
 
                 Logger.Instance.AddInfo(
                     string.Format(
-                        ModPlusAPI.Language.GetItem(LangItem, "m3"),
+                        ModPlusAPI.Language.GetItem("m3"),
                         DateTime.Now.ToLocalTime(),
                         revitDocument.Title));
                 Logger.Instance.AddInfo("---------");
 
                 return new GeneralItemsGroup(
-                    ModPlusAPI.Language.GetItem(LangItem, "h15"),
+                    ModPlusAPI.Language.GetItem("h15"),
                     categoryGroups)
                 {
                     IsExpanded = false
@@ -186,7 +186,7 @@
                 ExceptionBox.Show(exception);
 
                 return new GeneralItemsGroup(
-                    ModPlusAPI.Language.GetItem(LangItem, "m28"),
+                    ModPlusAPI.Language.GetItem("m28"),
                     new List<BrowserItem>());
             }
         }
@@ -201,7 +201,7 @@
             // Начало операции сбора типоразмеров модели
             Logger.Instance.AddInfo(
                 string.Format(
-                    ModPlusAPI.Language.GetItem(LangItem, "m60"),
+                    ModPlusAPI.Language.GetItem("m60"),
                     DateTime.Now.ToLocalTime(),
                     revitDocument.Title));
 
@@ -212,13 +212,13 @@
                 // Завершение операции сбора типоразмеров модели
                 Logger.Instance.AddInfo(
                     string.Format(
-                        ModPlusAPI.Language.GetItem(LangItem, "m61"),
+                        ModPlusAPI.Language.GetItem("m61"),
                         DateTime.Now.ToLocalTime(),
                         revitDocument.Title));
                 Logger.Instance.AddInfo("---------");
 
                 return new GeneralItemsGroup(
-                    ModPlusAPI.Language.GetItem(LangItem, "h14"),
+                    ModPlusAPI.Language.GetItem("h14"),
                     categoryGroups)
                 {
                     IsExpanded = false
@@ -229,7 +229,7 @@
                 ExceptionBox.Show(exception);
 
                 return new GeneralItemsGroup(
-                    ModPlusAPI.Language.GetItem(LangItem, "m28"),
+                    ModPlusAPI.Language.GetItem("m28"),
                     new List<BrowserItem>());
             }
         }
@@ -288,12 +288,12 @@
             var revitDocuments = documentsTo.ToList();
 
             Logger.Instance.AddInfo(string.Format(
-                ModPlusAPI.Language.GetItem(LangItem, "m5"),
+                ModPlusAPI.Language.GetItem("m5"),
                 DateTime.Now.ToLocalTime(),
                 documentFrom.Title,
                 string.Join(", ", revitDocuments.Select(doc => doc.Title))));
             Logger.Instance.AddInfo(string.Format(
-                ModPlusAPI.Language.GetItem(LangItem, "m8"),
+                ModPlusAPI.Language.GetItem("m8"),
                 GetCopyingOptionsName(copyingOptions)));
 
             var copyPasteOption = new CopyPasteOptions();
@@ -340,7 +340,7 @@
 
                         using (var transaction = new Transaction(
                             documentTo.Document,
-                            ModPlusAPI.Language.GetItem(LangItem, "m27")))
+                            ModPlusAPI.Language.GetItem("m27")))
                         {
                             transaction.Start();
 
@@ -355,7 +355,7 @@
                                     else
                                     {
                                         Logger.Instance.AddInfo(string.Format(
-                                            ModPlusAPI.Language.GetItem(LangItem, "m9"),
+                                            ModPlusAPI.Language.GetItem("m9"),
                                             DateTime.Now.ToLocalTime(),
                                             documentTo.Title));
                                     }
@@ -374,7 +374,7 @@
                             catch (Exception e)
                             {
                                 Logger.Instance.AddError(string.Format(
-                                    ModPlusAPI.Language.GetItem(LangItem, "m7"),
+                                    ModPlusAPI.Language.GetItem("m7"),
                                     DateTime.Now.ToLocalTime(),
                                     element.Name,
                                     element.Id,
@@ -390,7 +390,7 @@
                     catch (Exception e)
                     {
                         Logger.Instance.AddError(string.Format(
-                            ModPlusAPI.Language.GetItem(LangItem, "m7"),
+                            ModPlusAPI.Language.GetItem("m7"),
                             DateTime.Now.ToLocalTime(),
                             element.Name,
                             element.Id,
@@ -419,7 +419,7 @@
             }
 
             Logger.Instance.AddInfo(string.Format(
-                ModPlusAPI.Language.GetItem(LangItem, "m6"),
+                ModPlusAPI.Language.GetItem("m6"),
                 DateTime.Now.ToLocalTime(),
                 documentFrom.Title,
                 string.Join(", ", revitDocuments.Select(doc => doc.Title))));
@@ -436,11 +436,11 @@
             switch (copyingOptions)
             {
                 case CopyingOptions.AllowDuplicates:
-                    return ModPlusAPI.Language.GetItem(LangItem, "co1");
+                    return ModPlusAPI.Language.GetItem("co1");
                 case CopyingOptions.RefuseDuplicate:
-                    return ModPlusAPI.Language.GetItem(LangItem, "co2");
+                    return ModPlusAPI.Language.GetItem("co2");
                 case CopyingOptions.AskUser:
-                    return ModPlusAPI.Language.GetItem(LangItem, "co3");
+                    return ModPlusAPI.Language.GetItem("co3");
                 default:
                     return string.Empty;
             }
@@ -488,12 +488,12 @@
                 if (_currentCopiedElement != null)
                 {
                     Logger.Instance.AddError(string.Format(
-                        ModPlusAPI.Language.GetItem(LangItem, "m7"),
+                        ModPlusAPI.Language.GetItem("m7"),
                         DateTime.Now.ToLocalTime(),
                         _currentCopiedElement.Name,
                         _currentCopiedElement.Id,
                         _currentCopiedElement.CategoryName,
-                        ModPlusAPI.Language.GetItem(LangItem, "m62")));
+                        ModPlusAPI.Language.GetItem("m62")));
                 }
 
                 processingResult = FailureProcessingResult.ProceedWithRollBack;
@@ -506,24 +506,40 @@
 
         private static IEnumerable<BrowserItem> GetElementTypes(RevitDocument revitDocument)
         {
+            var noCategory = ModPlusAPI.Language.GetItem("m64");
             return new FilteredElementCollector(revitDocument.Document)
                 .WhereElementIsElementType()
-                .Where(e => e.Category != null && e.GetType() != typeof(ViewSheet))
+                .OfType<ElementType>()
+                .Where(e => !(e is ViewFamilyType) &&
+                            !(e is BrowserOrganization) &&
+                            e.CanBeCopied &&
+                            e.GetType() != typeof(ViewSheet) &&
+                            !string.IsNullOrEmpty(e.Name) &&
+                            !string.IsNullOrEmpty(e.FamilyName))
                 .Select(e =>
                 {
                     try
                     {
+                        if (e.Category != null)
+                        {
+                            return new BrowserItem(
+                                e.Id.IntegerValue,
+                                $"{e.Category.Name}{ModPlusAPI.Language.GetItem("m11")}",
+                                e.FamilyName,
+                                e.Name);
+                        }
+
                         return new BrowserItem(
                             e.Id.IntegerValue,
-                            e.Category.Name + ModPlusAPI.Language.GetItem(LangItem, "m11"),
-                            ((ElementType)e).FamilyName,
+                            noCategory,
+                            e.FamilyName,
                             e.Name);
                     }
                     catch (Exception ex)
                     {
                         Logger.Instance.AddError(
                             string.Format(
-                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                ModPlusAPI.Language.GetItem("m1"),
                                 DateTime.Now.ToLocalTime(),
                                 e.Id.IntegerValue,
                                 ex.Message));
@@ -553,7 +569,7 @@
                     {
                         categories.Add(new BrowserItem(
                             element.Id.IntegerValue,
-                            ModPlusAPI.Language.GetItem(LangItem, "m59"),
+                            ModPlusAPI.Language.GetItem("m59"),
                             string.Empty,
                             element.Name));
                     }
@@ -569,18 +585,18 @@
             if (revitDocument.Document.IsFamilyDocument)
                 return parameters;
 
+            var group = ModPlusAPI.Language.GetItem("m63");
+
             foreach (var element in new FilteredElementCollector(revitDocument.Document)
                 .OfClass(typeof(SharedParameterElement))
-                .OfType<SharedParameterElement>()
-                .Where(e => e.GetTypeId() != ElementId.InvalidElementId))
+                .OfType<SharedParameterElement>())
             {
                 try
                 {
-                    var elementType = (ElementType)revitDocument.Document.GetElement(element.GetTypeId());
                     var browserItem = new BrowserItem(
                         element.Id.IntegerValue,
-                        element.Category?.Name ?? _specialTypeCategoryNames[element.GetType().Name],
-                        elementType != null ? elementType.FamilyName : string.Empty,
+                        group,
+                        LabelUtils.GetLabelFor(element.GetDefinition().ParameterGroup),
                         element.Name)
                     {
                         SecondRowValue = element.GuidValue.ToString(),
@@ -592,7 +608,7 @@
                 catch (Exception ex)
                 {
                     Logger.Instance.AddError(string.Format(
-                        ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                        ModPlusAPI.Language.GetItem("m1"),
                         DateTime.Now.ToLocalTime(),
                         element.Id.IntegerValue.ToString(),
                         ex.Message));
@@ -626,7 +642,7 @@
                     {
                         Logger.Instance.AddError(
                             string.Format(
-                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                ModPlusAPI.Language.GetItem("m1"),
                                 DateTime.Now.ToLocalTime(),
                                 e.Id.IntegerValue,
                                 ex.Message));
@@ -646,7 +662,7 @@
                     {
                         return new BrowserItem(
                             e.Id.IntegerValue,
-                            ModPlusAPI.Language.GetItem(LangItem, "m10"),
+                            ModPlusAPI.Language.GetItem("m10"),
                             "-",
                             e.Name)
                         {
@@ -657,7 +673,7 @@
                     {
                         Logger.Instance.AddError(
                             string.Format(
-                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                ModPlusAPI.Language.GetItem("m1"),
                                 DateTime.Now.ToLocalTime(),
                                 e.Id.IntegerValue,
                                 ex.Message));
@@ -688,7 +704,7 @@
                     {
                         Logger.Instance.AddError(
                             string.Format(
-                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                ModPlusAPI.Language.GetItem("m1"),
                                 DateTime.Now.ToLocalTime(),
                                 e.Id.IntegerValue,
                                 ex.Message));
@@ -720,7 +736,7 @@
                     {
                         Logger.Instance.AddError(
                             string.Format(
-                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                ModPlusAPI.Language.GetItem("m1"),
                                 DateTime.Now.ToLocalTime(),
                                 e.Id.IntegerValue,
                                 ex.Message));
@@ -752,7 +768,7 @@
                     {
                         Logger.Instance.AddError(
                             string.Format(
-                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                ModPlusAPI.Language.GetItem("m1"),
                                 DateTime.Now.ToLocalTime(),
                                 e.Id.IntegerValue,
                                 ex.Message));
@@ -774,7 +790,7 @@
                         var viewType = ((View)e).ViewType;
                         return new BrowserItem(
                             e.Id.IntegerValue,
-                            ModPlusAPI.Language.GetItem(LangItem, "m29"),
+                            ModPlusAPI.Language.GetItem("m29"),
                             _viewTypeNames[viewType],
                             e.Name);
                     }
@@ -782,7 +798,7 @@
                     {
                         Logger.Instance.AddError(
                             string.Format(
-                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                ModPlusAPI.Language.GetItem("m1"),
                                 DateTime.Now.ToLocalTime(),
                                 e.Id.IntegerValue,
                                 ex.Message));
@@ -818,7 +834,7 @@
                     {
                         Logger.Instance.AddError(
                             string.Format(
-                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                ModPlusAPI.Language.GetItem("m1"),
                                 DateTime.Now.ToLocalTime(),
                                 e.Id.IntegerValue,
                                 ex.Message));
@@ -848,7 +864,7 @@
                     {
                         Logger.Instance.AddError(
                             string.Format(
-                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                ModPlusAPI.Language.GetItem("m1"),
                                 DateTime.Now.ToLocalTime(),
                                 e.Id.IntegerValue,
                                 ex.Message));

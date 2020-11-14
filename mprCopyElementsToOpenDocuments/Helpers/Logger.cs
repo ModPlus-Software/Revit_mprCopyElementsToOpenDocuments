@@ -1,47 +1,35 @@
 ﻿namespace mprCopyElementsToOpenDocuments.Helpers
 {
-    using System.Text;
+    using ModPlusAPI.Enums;
+    using ModPlusAPI.Services;
 
     /// <summary>
     /// Журнал работы приложения
     /// </summary>
-    public class Logger
+    public sealed class Logger
     {
         private static Logger _instance;
-        private StringBuilder _logger;
-        private int _errorsCount;
-        private static readonly object Mutex = new object();
+        private readonly ResultService _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Logger"/> class.
         /// </summary>
-        protected Logger()
+        private Logger()
         {
-            _logger = new StringBuilder();
-            _errorsCount = 0;
+            _logger = new ResultService();
         }
 
         /// <summary>
         /// Экземпляр списка для ведения журнала работы приложения
         /// </summary>
-        public static Logger Instance
-        {
-            get
-            {
-                lock (Mutex)
-                {
-                    return _instance ?? (_instance = new Logger());
-                }
-            }
-        }
+        public static Logger Instance => _instance ?? (_instance = new Logger());
 
         /// <summary>
         /// Clear log
         /// </summary>
         public void Clear()
         {
-            _logger = new StringBuilder();
-            _errorsCount = 0;
+            _logger.Clear();
         }
 
         /// <summary>
@@ -50,7 +38,7 @@
         /// <param name="message">Message</param>
         public void AddInfo(string message)
         {
-            _logger.AppendLine(message);
+            _logger.Add(message, null);
         }
 
         /// <summary>
@@ -59,16 +47,15 @@
         /// <param name="message">Message</param>
         public void AddError(string message)
         {
-            _logger.AppendLine(message);
-            _errorsCount++;
+            _logger.Add(message, null, ResultItemType.Error);
         }
 
         /// <summary>
-        /// Get log as one string instance
+        /// Show logger window
         /// </summary>
-        public string GetLogString()
+        public void Show()
         {
-            return _logger.ToString();
+            _logger.ShowByType();
         }
 
         /// <summary>
@@ -76,7 +63,7 @@
         /// </summary>
         public int GetErrorsCount()
         {
-            return _errorsCount;
+            return _logger.Count(ResultItemType.Error);
         }
     }
 }

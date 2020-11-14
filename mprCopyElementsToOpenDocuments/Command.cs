@@ -4,7 +4,6 @@
     using Autodesk.Revit.Attributes;
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
-    using ModPlusAPI;
     using ModPlusAPI.Windows;
     using ViewModels;
     using Views;
@@ -22,7 +21,7 @@
             try
             {
 #if !DEBUG
-                Statistic.SendCommandStarting(ModPlusConnector.Instance);
+                ModPlusAPI.Statistic.SendCommandStarting(ModPlusConnector.Instance);
 #endif
 
                 if (_mainView == null)

@@ -18,7 +18,6 @@
     /// </summary>
     public class MainViewModel : VmBase
     {
-        private readonly string _langItem = ModPlusConnector.Instance.Name;
         private readonly RevitOperationService _revitOperationService;
         private int _passedElements;
         private int _brokenElements;
@@ -105,7 +104,7 @@
         /// <summary>
         /// Команда открытия журнала работы приложения
         /// </summary>
-        public ICommand OpenLogCommand => new RelayCommandWithoutParameter(OpenLog);
+        public ICommand OpenLogCommand => new RelayCommandWithoutParameter(() => Logger.Instance.Show());
 
         /// <summary>
         /// Команда остановки процесса копирования
@@ -195,10 +194,12 @@
         /// </summary>
         public bool ShowSharedParametersGuid
         {
-            get => bool.TryParse(UserConfigFile.GetValue(_langItem, nameof(ShowSharedParametersGuid)), out var b) && b;
+            get => bool.TryParse(
+                UserConfigFile.GetValue(ModPlusConnector.Instance.Name, nameof(ShowSharedParametersGuid)), out var b) && b;
             set
             {
-                UserConfigFile.SetValue(_langItem, nameof(ShowSharedParametersGuid), value.ToString(), true);
+                UserConfigFile.SetValue(
+                    ModPlusConnector.Instance.Name, nameof(ShowSharedParametersGuid), value.ToString(), true);
                 OnPropertyChanged();
             }
         }
@@ -208,10 +209,11 @@
         /// </summary>
         public bool SuppressWarnings
         {
-            get => !bool.TryParse(UserConfigFile.GetValue(_langItem, nameof(SuppressWarnings)), out var b) || b;
+            get => !bool.TryParse(
+                UserConfigFile.GetValue(ModPlusConnector.Instance.Name, nameof(SuppressWarnings)), out var b) || b;
             set
             {
-                UserConfigFile.SetValue(_langItem, nameof(SuppressWarnings), value.ToString(), true);
+                UserConfigFile.SetValue(ModPlusConnector.Instance.Name, nameof(SuppressWarnings), value.ToString(), true);
                 OnPropertyChanged();
             }
         }
@@ -522,17 +524,7 @@
                    && FromDocument != null
                    && ToDocuments.Any(doc => doc.Selected);
         }
-
-        /// <summary>
-        /// Открывает окно журнала работы приложения
-        /// </summary>
-        private void OpenLog()
-        {
-            var loggerViewModel = new LoggerViewModel();
-            var loggerView = new LoggerView { DataContext = loggerViewModel };
-            loggerView.ShowDialog();
-        }
-
+        
         /// <summary>
         /// Остановка операции копирования
         /// </summary>
@@ -584,12 +576,12 @@
                 IsVisible = Visibility.Hidden;
                 _mainView.IsChangeableFieldsEnabled = true;
                 var resultMessage = string.Format(
-                    Language.GetItem(_langItem, "m31"),
+                    Language.GetItem("m31"),
                     PassedElements - BrokenElements,
                     Environment.NewLine,
                     BrokenElements,
                     Environment.NewLine);
-                TaskDialog.Show(Language.GetItem(_langItem, "m30"), resultMessage);
+                TaskDialog.Show(Language.GetItem("m30"), resultMessage);
                 _mainView.Activate();
                 PassedElements = 0;
                 BrokenElements = 0;
