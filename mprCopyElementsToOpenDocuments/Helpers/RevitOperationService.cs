@@ -325,17 +325,11 @@
                         await Task.Delay(10).ConfigureAwait(true);
 
                         Workset workset = null;
-                        ICollection<ElementId> elementIds = null;
                         if (element.IsWorksetId)
                         {
                             var worksetId = new WorksetId(element.Id);
                             var worksetTable = documentFrom.Document.GetWorksetTable();
                             workset = worksetTable.GetWorkset(worksetId);
-                        }
-                        else
-                        {
-                            var elementId = new ElementId(element.Id);
-                            elementIds = new List<ElementId> { elementId };
                         }
 
                         using (var transaction = new Transaction(
@@ -360,15 +354,23 @@
                                             documentTo.Title));
                                     }
                                 }
-
-                                if (elementIds != null && elementIds.Any())
+                                else
                                 {
-                                    ElementTransformUtils.CopyElements(
+                                    var elementId = new ElementId(element.Id);
+
+                                    var copiedElementIds = ElementTransformUtils.CopyElements(
                                         documentFrom.Document,
-                                        elementIds,
+                                        new List<ElementId> { elementId },
                                         documentTo.Document,
                                         null,
                                         copyPasteOption);
+
+                                    if (documentFrom.Document.GetElement(elementId) is ViewDrafting sourceViewDrafting &&
+                                        copiedElementIds.FirstOrDefault() is ElementId targetViewDraftingId &&
+                                        documentTo.Document.GetElement(targetViewDraftingId) is ViewDrafting targetViewDrafting)
+                                    {
+                                        CopyDraftingViewContents(sourceViewDrafting, targetViewDrafting, copyPasteOption);
+                                    }
                                 }
                             }
                             catch (Exception e)
@@ -424,6 +426,37 @@
                 documentFrom.Title,
                 string.Join(", ", revitDocuments.Select(doc => doc.Title))));
             Logger.Instance.AddInfo("---------");
+        }
+
+        /// <summary>
+        /// Копировать содержимое чертежного вида
+        /// </summary>
+        /// <param name="sourceViewDrafting">Исходный чертежный вид</param>
+        /// <param name="targetViewDrafting">Целевой чертежный вид</param>
+        /// <param name="cpOptions">Опции копирования</param>
+        private void CopyDraftingViewContents(
+            ViewDrafting sourceViewDrafting,
+            ViewDrafting targetViewDrafting,
+            CopyPasteOptions cpOptions)
+        {
+            targetViewDrafting.Scale = sourceViewDrafting.Scale;
+            
+            var viewContentsDrafting =
+                new FilteredElementCollector(sourceViewDrafting.Document).OwnedByView(sourceViewDrafting.Id);
+            
+            var viewContents = new List<ElementId>();
+
+            foreach (var item in viewContentsDrafting.Where(i =>
+                i.Category != null &&
+                i.Category.Id.IntegerValue != (int)BuiltInCategory.OST_IOSSketchGrid))
+            {
+                viewContents.Add(item.Id);
+            }
+
+            if (viewContents.Any())
+            {
+                ElementTransformUtils.CopyElements(sourceViewDrafting, viewContents, targetViewDrafting, null, cpOptions);
+            }
         }
 
         /// <summary>

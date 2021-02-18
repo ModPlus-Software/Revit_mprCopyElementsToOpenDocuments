@@ -75,7 +75,8 @@
                 {
                     foreach (var item in Items)
                     {
-                        item.Checked = value;
+                        if (item.Visibility == Visibility.Visible)
+                            item.Checked = value;
                     }
                 }
 
