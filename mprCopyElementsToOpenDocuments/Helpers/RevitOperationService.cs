@@ -784,7 +784,7 @@
             return new FilteredElementCollector(revitDocument.Document)
                 .OfClass(typeof(View))
                 .WhereElementIsNotElementType()
-                .Where(e => !((View)e).IsTemplate)
+                .Where(e => !((View)e).IsTemplate && !(e is ViewSheet))
                 .Where(e => e.GetTypeId() != ElementId.InvalidElementId)
                 .Select(e =>
                 {
