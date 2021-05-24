@@ -920,7 +920,7 @@
                         return new BrowserItem(
                             e.Id.IntegerValue,
                             e.Category.Name,
-                            e.MaterialCategory,
+                            e.MaterialClass,
                             e.Name);
                     }
                     catch (Exception exception)
