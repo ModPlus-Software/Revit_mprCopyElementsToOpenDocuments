@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
    <PropertyGroup>
-    <Version>1.9.7.0</Version>
+    <Version>1.9.8.0</Version>
     <RootNamespace>mprCopyElementsToOpenDocuments</RootNamespace>
     <AssemblyName>$(RootNamespace)</AssemblyName>
   </PropertyGroup>
@@ -17,6 +17,7 @@
     <Optimize>false</Optimize>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWpf>true</UseWpf>
+  <MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'R2017'">
@@ -69,37 +70,37 @@
     <When Condition="'$(Configuration)'=='R2017'">
       <ItemGroup>
         <PackageReference Include="ModPlus.Revit.API.2017" Version="1.0.0" ExcludeAssets="runtime" />
-        <PackageReference Include="ModPlus.Revit.Module.2017" Version="6.5.0" ExcludeAssets="runtime" />
+        <PackageReference Include="ModPlus.Revit.Module.2017" Version="7.0.4" ExcludeAssets="runtime" />
       </ItemGroup>
     </When>
     <When Condition="'$(Configuration)'=='R2018'">
       <ItemGroup>
         <PackageReference Include="ModPlus.Revit.API.2018" Version="1.0.0" ExcludeAssets="runtime" />
-        <PackageReference Include="ModPlus.Revit.Module.2018" Version="6.5.0" ExcludeAssets="runtime" />
+        <PackageReference Include="ModPlus.Revit.Module.2018" Version="7.0.4" ExcludeAssets="runtime" />
       </ItemGroup>
     </When>
     <When Condition="'$(Configuration)'=='R2019'">
       <ItemGroup>
-        <PackageReference Include="ModPlus.Revit.API.2019" Version="1.0.0" ExcludeAssets="runtime" />
-        <PackageReference Include="ModPlus.Revit.Module.2019" Version="6.5.0" ExcludeAssets="runtime" />
+        <PackageReference Include="ModPlus.Revit.API.2019" Version="2.0.1" ExcludeAssets="runtime" />
+        <PackageReference Include="ModPlus.Revit.Module.2019" Version="7.0.4" ExcludeAssets="runtime" />
       </ItemGroup>
     </When>
     <When Condition="'$(Configuration)'=='R2020'">
       <ItemGroup>
-        <PackageReference Include="ModPlus.Revit.API.2020" Version="1.0.0" ExcludeAssets="runtime" />
-        <PackageReference Include="ModPlus.Revit.Module.2020" Version="6.5.0" ExcludeAssets="runtime" />
+        <PackageReference Include="ModPlus.Revit.API.2020" Version="2.0.0" ExcludeAssets="runtime" />
+        <PackageReference Include="ModPlus.Revit.Module.2020" Version="7.0.4" ExcludeAssets="runtime" />
       </ItemGroup>
     </When>
     <When Condition="'$(Configuration)'=='R2021'">
       <ItemGroup>
-        <PackageReference Include="ModPlus.Revit.API.2021" Version="1.0.0" ExcludeAssets="runtime" />
-        <PackageReference Include="ModPlus.Revit.Module.2021" Version="6.5.0" ExcludeAssets="runtime" />
+        <PackageReference Include="ModPlus.Revit.API.2021" Version="2.0.0" ExcludeAssets="runtime" />
+        <PackageReference Include="ModPlus.Revit.Module.2021" Version="7.0.4" ExcludeAssets="runtime" />
       </ItemGroup>
     </When>
     <When Condition="'$(Configuration)'=='R2022' or '$(Configuration)'=='Debug'">
       <ItemGroup>
-        <PackageReference Include="ModPlus.Revit.API.2022" Version="1.0.0" ExcludeAssets="runtime" />
-        <PackageReference Include="ModPlus.Revit.Module.2022" Version="6.5.0" ExcludeAssets="runtime" />
+        <PackageReference Include="ModPlus.Revit.API.2022" Version="2.0.0" ExcludeAssets="runtime" />
+        <PackageReference Include="ModPlus.Revit.Module.2022" Version="7.0.4" ExcludeAssets="runtime" />
       </ItemGroup>
     </When>
   </Choose>

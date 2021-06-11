@@ -9,6 +9,7 @@
     using Autodesk.Revit.UI;
     using Helpers;
     using Models;
+    using Models.Interfaces;
     using ModPlusAPI;
     using ModPlusAPI.Mvvm;
     using Views;
@@ -171,8 +172,10 @@
             get => _searchString;
             set
             {
+                if (_searchString == value)
+                    return;
                 _searchString = value;
-                UpdateItemsVisibility();
+                Search();
             }
         }
 
@@ -287,82 +290,53 @@
             }
         }
 
-        /// <summary>
-        /// Обновляет видимость элементов дерева
-        /// </summary>
-        public void UpdateItemsVisibility()
+        private void Search()
         {
-            if (string.IsNullOrEmpty(SearchString))
+            var searchString = SearchString.ToUpperInvariant();
+            if (!string.IsNullOrWhiteSpace(searchString))
             {
-                foreach (var generalGroup in GeneralGroups)
+                var matchSearchBrowserItems = GetMatchSearchBrowserItems(GeneralGroups, searchString).ToList();
+                foreach (var browserItem in matchSearchBrowserItems)
                 {
-                    foreach (var categoryGroup in generalGroup.Items)
-                    {
-                        categoryGroup.ShowItem();
-                        foreach (var typeGroup in categoryGroup.Items)
-                        {
-                            categoryGroup.IsExpanded = false;
-                            typeGroup.Visibility = Visibility.Visible;
-                            typeGroup.ShowAllItems();
-                        }
-                    }
+                    browserItem.IsVisible = true;
+                    SetIsExpandedUp(browserItem, true);
                 }
             }
-
-            foreach (var generalGroup in GeneralGroups)
+            else
             {
-                foreach (var categoryGroup in generalGroup.Items)
+                SetAllVisible(GeneralGroups);
+                CollapseAll();
+            }
+        }
+
+        private IEnumerable<IBrowserItem> GetMatchSearchBrowserItems(
+            IEnumerable<IBrowserItem> browserItems, string searchString)
+        {
+            foreach (var item in browserItems)
+            {
+                if (item.NameUpperInvariant.Contains(searchString))
                 {
-                    var typeFound = false;
-                    if (categoryGroup.Name.ToUpperInvariant().Contains(SearchString.ToUpperInvariant()))
-                    {
-                        categoryGroup.ShowItem();
-                        foreach (var typeGroup in categoryGroup.Items)
-                        {
-                            typeGroup.ShowItem();
-                            typeGroup.ShowAllItems();
-                        }
-                    }
-                    else
-                    {
-                        foreach (var typeGroup in categoryGroup.Items)
-                        {
-                            if (typeGroup.Name.ToUpperInvariant().Contains(SearchString.ToUpperInvariant()))
-                            {
-                                typeFound = true;
-                                categoryGroup.ShowItem(true);
-                                typeGroup.ShowItem();
-                                typeGroup.ShowAllItems();
-                            }
-                            else
-                            {
-                                foreach (var item in typeGroup.Items)
-                                {
-                                    item.Visibility = item.Name.ToUpperInvariant()
-                                        .Contains(SearchString.ToUpperInvariant())
-                                        ? Visibility.Visible
-                                        : Visibility.Collapsed;
-                                }
-
-                                if (typeGroup.Items.Any(item => item.Visibility == Visibility.Visible))
-                                {
-                                    generalGroup.IsExpanded = true;
-                                    categoryGroup.ShowItem(true);
-                                    typeGroup.ShowItem(true);
-                                }
-                                else
-                                {
-                                    if (!typeFound)
-                                    {
-                                        categoryGroup.HideItem();
-                                    }
-
-                                    typeGroup.HideItem();
-                                }
-                            }
-                        }
-                    }
+                    yield return item;
                 }
+                else
+                {
+                    item.IsVisible = false;
+                    item.IsExpanded = false;
+                }
+                
+                foreach (var browserItem in GetMatchSearchBrowserItems(item.Items, searchString))
+                {
+                    yield return browserItem;
+                }
+            }
+        }
+
+        private void SetAllVisible(IEnumerable<IBrowserItem> browserItems)
+        {
+            foreach (var browserItem in browserItems)
+            {
+                browserItem.IsVisible = true;
+                SetAllVisible(browserItem.Items);
             }
         }
 
@@ -371,17 +345,26 @@
         /// </summary>
         private void ExpandAll()
         {
-            foreach (var generalGroup in GeneralGroups)
+            SetIsExpandedDown(GeneralGroups, true);
+        }
+
+        private void SetIsExpandedDown(IEnumerable<IBrowserItem> browserItems, bool isExpanded)
+        {
+            foreach (var browserItem in browserItems)
             {
-                generalGroup.IsExpanded = true;
-                foreach (var categoryGroup in generalGroup.Items)
-                {
-                    categoryGroup.IsExpanded = true;
-                    foreach (var typeGroup in categoryGroup.Items)
-                    {
-                        typeGroup.IsExpanded = true;
-                    }
-                }
+                browserItem.IsExpanded = isExpanded;
+                SetIsExpandedDown(browserItem.Items, isExpanded);
+            }
+        }
+
+        private void SetIsExpandedUp(IBrowserItem browserItem, bool isExpanded)
+        {
+            browserItem.IsExpanded = isExpanded;
+            var parent = browserItem.ParentBrowserItem;
+            while (parent != null)
+            {
+                parent.IsExpanded = isExpanded;
+                parent = parent.ParentBrowserItem;
             }
         }
 
@@ -390,18 +373,7 @@
         /// </summary>
         private void CollapseAll()
         {
-            foreach (var generalGroup in GeneralGroups)
-            {
-                generalGroup.IsExpanded = false;
-                foreach (var categoryGroup in generalGroup.Items)
-                {
-                    categoryGroup.IsExpanded = false;
-                    foreach (var typeGroup in categoryGroup.Items)
-                    {
-                        typeGroup.IsExpanded = false;
-                    }
-                }
-            }
+            SetIsExpandedDown(GeneralGroups, false);
         }
 
         /// <summary>
@@ -462,7 +434,7 @@
 
             var otherElements = _revitOperationService.GetAllRevitElements(FromDocument);
             otherElements.SelectionChanged += OnCheckedElementsCountChanged;
-            
+
             GeneralGroups.Clear();
             GeneralGroups.Add(types);
             GeneralGroups.Add(otherElements);
@@ -489,7 +461,7 @@
                 }
             }
 
-            UpdateItemsVisibility();
+            Search();
             OnPropertyChanged(nameof(ErrorsCount));
         }
 
@@ -510,7 +482,7 @@
                             SelectedItems,
                             CopyingOptions,
                             SuppressWarnings);
-            
+
             OnPropertyChanged(nameof(ErrorsCount));
         }
 
@@ -524,7 +496,7 @@
                    && FromDocument != null
                    && ToDocuments.Any(doc => doc.Selected);
         }
-        
+
         /// <summary>
         /// Остановка операции копирования
         /// </summary>

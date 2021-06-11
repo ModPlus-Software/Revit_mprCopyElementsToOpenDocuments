@@ -3,17 +3,17 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Windows;
     using Interfaces;
     using ModPlusAPI.Mvvm;
 
     /// <summary>
     /// Общая группа элементов в браузере
     /// </summary>
-    public class GeneralItemsGroup : VmBase, IBrowserItem, IExpandableGroup
+    public class GeneralItemsGroup : VmBase, IBrowserItem
     {
         private bool? _checked = false;
         private bool _isExpanded = true;
+        private bool _isVisible = true;
 
         /// <summary>
         /// Создает экземпляр класса <see cref="GeneralItemsGroup"/>
@@ -23,10 +23,12 @@
         public GeneralItemsGroup(string name, IEnumerable<BrowserItem> groups)
         {
             Name = name;
+            NameUpperInvariant = name.ToUpperInvariant();
             Items = new ObservableCollection<BrowserItem>();
 
             foreach (var g in groups)
             {
+                g.ParentBrowserItem = this;
                 g.SelectionChanged += OnGroupSelectionChanged;
                 Items.Add(g);
             }
@@ -37,9 +39,15 @@
         /// </summary>
         public event EventHandler SelectionChanged;
 
+        /// <inheritdoc/>
+        public IBrowserItem ParentBrowserItem { get; set; } = null;
+
         /// <inheritdoc />
         public string Name { get; }
-        
+
+        /// <inheritdoc/>
+        public string NameUpperInvariant { get; }
+
         /// <inheritdoc />
         public bool? Checked
         {
@@ -50,7 +58,7 @@
 
                 foreach (var group in Items)
                 {
-                    if (group.Visibility == Visibility.Visible)
+                    if (group.IsVisible)
                         group.Checked = value;
                 }
 
@@ -65,6 +73,19 @@
         /// <inheritdoc/>
         public string SecondRowValue { get; set; }
 
+        /// <inheritdoc/>
+        public bool IsVisible
+        {
+            get => _isVisible;
+            set
+            {
+                if (_isVisible == value)
+                    return;
+                _isVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
         /// <inheritdoc />
         public bool IsExpanded
         {
@@ -76,10 +97,8 @@
             }
         }
 
-        /// <summary>
-        /// Список элементов группы
-        /// </summary>
-        public ObservableCollection<BrowserItem> Items { get; }
+        /// <inheritdoc/>
+        public ObservableCollection<BrowserItem> Items { get; set; }
 
         /// <summary>
         /// Метод обработки выделения элементов в браузере

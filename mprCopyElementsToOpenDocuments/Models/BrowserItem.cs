@@ -11,12 +11,12 @@
     /// <summary>
     /// Элемент в браузере
     /// </summary>
-    public class BrowserItem : VmBase, IBrowserItem, IExpandableGroup, IRevitElement
+    public class BrowserItem : VmBase, IBrowserItem, IRevitElement
     {
         private bool? _checked = false;
         private bool _isExpanded;
         private ObservableCollection<BrowserItem> _items = new ObservableCollection<BrowserItem>();
-        private Visibility _visibility = Visibility.Visible;
+        private bool _isVisible = true;
 
         /// <summary>
         /// Создает экземпляр класса <see cref="BrowserItem"/>
@@ -31,6 +31,7 @@
             CategoryName = categoryName;
             FamilyName = familyName;
             Name = name;
+            NameUpperInvariant = name.ToUpperInvariant();
         }
 
         /// <summary>
@@ -41,27 +42,25 @@
         public BrowserItem(string name, List<BrowserItem> items)
         {
             Name = name;
+            NameUpperInvariant = name.ToUpperInvariant();
+            
+            ProcessSubItems(items, this);
 
-            items.ForEach(item =>
+            foreach (var item in items)
             {
-                item.SelectionChanged += OnItemSelectionChanged;
-
-                if (item.Items.Any())
-                {
-                    foreach (var browserItem in item.Items)
-                    {
-                        browserItem.SelectionChanged += OnItemSelectionChanged;
-                    }
-                }
-
                 _items.Add(item);
-            });
+            }
         }
 
         /// <summary>
         /// Событие выделения элемента
         /// </summary>
         public event EventHandler SelectionChanged;
+        
+        /// <summary>
+        /// Родительский элемент дерева
+        /// </summary>
+        public IBrowserItem ParentBrowserItem { get; set; }
 
         /// <inheritdoc/>
         public bool? Checked
@@ -75,7 +74,7 @@
                 {
                     foreach (var item in Items)
                     {
-                        if (item.Visibility == Visibility.Visible)
+                        if (item.IsVisible)
                             item.Checked = value;
                     }
                 }
@@ -90,6 +89,19 @@
 
         /// <inheritdoc/>
         public string SecondRowValue { get; set; }
+
+        /// <inheritdoc/>
+        public bool IsVisible
+        {
+            get => _isVisible;
+            set
+            {
+                _isVisible = value;
+                OnPropertyChanged();
+                if (value && ParentBrowserItem != null)
+                    ParentBrowserItem.IsVisible = true;
+            }
+        }
 
         /// <inheritdoc />
         public bool IsExpanded
@@ -113,6 +125,9 @@
 
         /// <inheritdoc/>
         public string Name { get; }
+        
+        /// <inheritdoc/>
+        public string NameUpperInvariant { get; }
 
         /// <summary>
         /// True указывает, что свойство <see cref="Id"/> содержит числовое представление типа
@@ -120,22 +135,7 @@
         /// </summary>
         public bool IsWorksetId { get; set; }
 
-        /// <summary>
-        /// Видимость элементов дерева
-        /// </summary>
-        public Visibility Visibility
-        {
-            get => _visibility;
-            set
-            {
-                _visibility = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        /// Список элементов группы
-        /// </summary>
+        /// <inheritdoc/>
         public ObservableCollection<BrowserItem> Items
         {
             get => _items;
@@ -145,37 +145,7 @@
                 OnPropertyChanged();
             }
         }
-
-        /// <summary>
-        /// Отображает элемент дерева при поиске
-        /// </summary>
-        /// <param name="isExpanded">Развернуть элемент</param>
-        public void ShowItem(bool isExpanded = false)
-        {
-            IsExpanded = isExpanded;
-            Visibility = Visibility.Visible;
-        }
-
-        /// <summary>
-        /// Скрывает элемент дерева при поиске
-        /// </summary>
-        public void HideItem()
-        {
-            IsExpanded = false;
-            Visibility = Visibility.Collapsed;
-        }
-
-        /// <summary>
-        /// Отображает все дочерние элементы
-        /// </summary>
-        public void ShowAllItems()
-        {
-            foreach (var item in Items)
-            {
-                item.Visibility = Visibility.Visible;
-            }
-        }
-
+        
         /// <summary>
         /// Метод обработки выделения элементов в браузере
         /// </summary>
@@ -190,6 +160,18 @@
         protected virtual void OnSelectionChanged()
         {
             SelectionChanged?.Invoke(this, EventArgs.Empty);
+        }
+        
+        private void ProcessSubItems(IEnumerable<BrowserItem> items, IBrowserItem parent)
+        {
+            foreach (var item in items)
+            {
+                item.SelectionChanged += OnItemSelectionChanged;
+                item.ParentBrowserItem = parent;
+                
+                if (item.Items.Any())
+                    ProcessSubItems(item.Items, item);
+            }
         }
     }
 }

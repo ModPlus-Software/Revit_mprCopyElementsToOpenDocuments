@@ -148,7 +148,7 @@
                 <TreeView.ItemContainerStyle>
                     <Style BasedOn="{StaticResource ModPlusTreeViewItem}" TargetType="{x:Type TreeViewItem}">
                         <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                        <Setter Property="Visibility" Value="{Binding Path=Visibility}"/>
+                        <Setter Property="Visibility" Value="{Binding Path=IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     </Style>
                 </TreeView.ItemContainerStyle>
             </TreeView>
